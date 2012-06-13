@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Search</title>
+        <link rel="stylesheet" href="demo.css" type="text/css" media="screen">
+        <link rel="stylesheet" href="demo-print.css" type="text/css" media="print">
+        <script src="raphael-min.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript" charset="utf-8">
+            Raphael.fn.arrow = function (x1, y1, x2, y2, size) {
+
+		var angle = Math.atan2(x1-x2,y2-y1);
+
+		angle = (angle / (2 * Math.PI)) * 360;
+
+		var arrowPath = this.path("M" + x2 + " " + y2 + " L" + (x2  - size) + " " + (y2  - size) + " L" + (x2  - size)  + " " + (y2  + size) + " L" + x2 + " " + y2 ).attr("fill","black").rotate((90+angle),x2,y2);
+
+		var linePath = this.path("M" + x1 + " " + y1 + " L" + x2 + " " + y2);
+
+		return [linePath,arrowPath];
+
+	};
+
+            window.onload = function () {
+                
+                var last="";
+                var r = Raphael("holder", 1024, 768);
+                
+                var c = r.rect(150, 250, 200, 50, 10);
+                var fld = r.text(220,270,"");
+                fld.attr({font: "14px Fontin-Sans, Arial"});
+                var nodes = r.set();
+                nodes.push(r.circle(20, 100, 20), // S
+                   r.circle(150, 20, 20), // A
+                   r.circle(150, 200, 20), // B
+                   r.circle(350,40,20), // C
+                   r.circle(300,200,20), // D
+                   r.circle(500,150,20) // G
+                   );
+                nodes.attr({fill: "#000", stroke: "#fff", "stroke-dasharray": "- ", opacity: .2});
+                var labels = r.set();
+                labels.push(r.text(20, 100, "S"),
+                            r.text(150,20,"B"),
+                            r.text(150,200,"A"),
+                            r.text(350,40,"C"),
+                            r.text(300,200,"D"),
+                            r.text(500,150,"G")
+                            );
+                labels.attr({font: "14px Fontin-Sans, Arial"});
+                r.arrow(40,100,130,20,5); // S-B
+                r.arrow(40,100,130,200,5); // S-A
+                r.arrow(170,200,280,200,5); // A-D
+                r.arrow(300,180,350,60,5); // D-C
+                r.arrow(370,40,500,130,5); // C-G
+                r.arrow(300,180,170,20,5); // D-B
+                r.arrow(170,20,330,40,5); // B-C
+                for (var i = 0, ii = nodes.length; i < ii; i++)
+                    {
+                    nodes[i].pair = labels[i];
+                    labels[i].pair = nodes[i];
+                    nodes[i].fld = fld;
+                    nodes[i].last = last;
+                    }
+                
+                var step = function () {
+                    var obj = this.type == 'circle' ? this : this.pair;
+                    
+                    var currColor = obj.attr('fill');
+                    var myTxt = obj.pair.attr('text');
+                    var fldTxt = obj.fld.attr('text');
+                    var lastNode = fldTxt.charAt(fldTxt.length-1);
+                    if (currColor=="#000")
+                        {
+                        if (lastNode == myTxt)
+                            return;
+                        if (fldTxt)
+                            fldTxt += '-';
+                        fldTxt += myTxt;
+                        obj.attr({fill: "#01DF01"});
+                        obj.fld.attr({text: fldTxt});
+                        
+                        }
+                    else
+                        {
+                        if (lastNode == myTxt)
+                            {
+                            obj.attr({fill: "#000"});
+                            fldTxt = fldTxt.substring(0, fldTxt.length-1);
+                            lastNode = fldTxt.charAt(fldTxt.length-1);
+                            if (lastNode == '-')
+                                {
+                                fldTxt = fldTxt.substring(0, fldTxt.length-1);   
+                                }
+                            obj.fld.attr({text: fldTxt});
+                            }
+                        }
+                    
+                };
+                
+                nodes.click(step);
+                labels.click(step);
+
+
+            };
+
+        </script>
+    </head>
+    <body>
+        <div id="holder"></div>
+    </body>
+</html>
