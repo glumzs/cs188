@@ -2,6 +2,7 @@ var last_x = 0;
 var anspath_coord_x = 620;
 var anspath_coord_y= 100;
 var green = "#01DF01";
+var orange= "#FF9000";
 
 function goal_test(obj)
     {
@@ -26,39 +27,42 @@ function goal_test(obj)
     
 function set_priority(obj)
     {
-    var html = '<form>' +
-		'<label for="priority">Priority</label>' +
-		'<input type="text" name="priority" id="priority" size="2" class="text ui-widget-content ui-corner-all" />'+
-	'</form>';
+    var curr_txt = obj.attr('text');
+    var new_txt = obj.paper.text(obj.pair.attrs.x+93,obj.attrs.y,"");
+    var handle_key = function (event) {
+        if (event.which == 8)
+            new_txt.attr({"text": ""});
+        else if (event.which == 13)
+            {
+            new_txt.removeCursor();
+            $(document).unbind('keyup');
+            }
+        else if (event.which >= 48 && event.which <= 57)
+              {
+              var tmptxt = new_txt.attr("text");
+              new_txt.attr({"text": tmptxt+String.fromCharCode(event.which)});           
+              }
+        };
     
-    var show_priority = function() {
-        var curr_txt = obj.attr('text');
-        var new_txt = obj.paper.text(obj.pair.attrs.x+93,obj.attrs.y,priority.value);
-        new_txt.attr({"font": "14px Fontin-Sans, Arial", "font-weight": "bold", "cursor": "default"});
-        $(this).dialog("close");
-        $(this).dialog('destroy').remove();
-    }
+    var edit_fld = function() {
+        new_txt.addCursor();
+        $(document).keyup( handle_key);
+    };
     
-    var $dialog = $('<div id="getpriority"></div>')
-        .html(html)
-        .dialog({autoOpen: false,
-        open: function() {
-        $(this).parents('.ui-dialog-buttonpane button:eq(0)').focus(); },
-	    modal: true,
-        height:170,
-        width:180,
-	    title: 'Set Priority',
-	    buttons: {"OK": show_priority}
-	});
-    $dialog.dialog('open');
+    new_txt.addCursor();
+    new_txt.click(edit_fld);
+    $(document).keyup( handle_key);
     
+    //new_txt.attr({"font": "14px Fontin-Sans, Arial", "font-weight": "bold", "text": "|"});
     }
 
             
             
 window.onload = function () 
     {
-                
+        
+    
+    
     var mk_fringe = function () {
         var choose_path = function () {
             var obj = this.type == 'rect' ? this : this.pair;
@@ -73,7 +77,7 @@ window.onload = function ()
                     if (labels[j].attr('text') == txtNodes[i])
                         nodes[j].attr({fill: green});
 
-            goal_test(obj);
+            //goal_test(obj);
 
 
                        
@@ -94,18 +98,19 @@ window.onload = function ()
         newholder.pathFld = obj.fld;
         newtxt.attr({text: fldTxt, font: "14px Fontin-Sans, Arial",
                     cursor: 'default'});
-        //var txtfld = $(newholder.node).append('<input type="text" value="0">');
-        //txtfld.focus();
+        
         set_priority(newtxt);
         newtxt.pair.click(choose_path);
         newtxt.click(choose_path);
+        
+        obj.attr({fill: orange});
         
     }
     
     
     
     var last="";
-    var r = Raphael("holder", 2000, 1000);
+    var r = Raphael("holder", 850, 1000);
     
     var fld = r.text(620,100,"");
     fld.attr({font: "14px Fontin-Sans, Arial"});
@@ -146,5 +151,5 @@ window.onload = function ()
     nodes.click(mk_fringe);
     labels.click(mk_fringe);
 
-
+    $('div#holder').find('> svg,div').css({'border': '1px solid #f00'});
     };
