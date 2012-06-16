@@ -1,18 +1,57 @@
 var last_x = 0;
+var anspath_coord_x = 620;
+var anspath_coord_y= 100;
+var green = "#01DF01";
 
-function goal_test()
+function goal_test(obj)
     {
     var html = 'Goal State?';
 
+    var search_done = function() {
+        var r = obj.paper;
+        var ans_highlight = r.rect(anspath_coord_x-50, anspath_coord_y-12, 100, 30, 10);
+        ans_highlight.attr({stroke: green});
+        $(this).dialog("close");
+    }
     var $dialog = $('<div id="goaltest"></div>')
         .html(html)
         .dialog({autoOpen: false,
 	    modal: true,
 	    title: 'Goal Test',
 	    buttons: {"No": function() {$(this).dialog("close");},
-                  "Yes": function() {$(this).dialog("close");}}
+                  "Yes": search_done}
 	});
     $dialog.dialog('open');
+    }
+    
+function set_priority(obj)
+    {
+    var html = '<form>' +
+		'<label for="priority">Priority</label>' +
+		'<input type="text" name="priority" id="priority" size="2" class="text ui-widget-content ui-corner-all" />'+
+	'</form>';
+    
+    var show_priority = function() {
+        var curr_txt = obj.attr('text');
+        var new_txt = obj.paper.text(obj.pair.attrs.x+93,obj.attrs.y,priority.value);
+        new_txt.attr({"font": "14px Fontin-Sans, Arial", "font-weight": "bold", "cursor": "default"});
+        $(this).dialog("close");
+        $(this).dialog('destroy').remove();
+    }
+    
+    var $dialog = $('<div id="getpriority"></div>')
+        .html(html)
+        .dialog({autoOpen: false,
+        open: function() {
+        $(this).parents('.ui-dialog-buttonpane button:eq(0)').focus(); },
+	    modal: true,
+        height:170,
+        width:180,
+	    title: 'Set Priority',
+	    buttons: {"OK": show_priority}
+	});
+    $dialog.dialog('open');
+    
     }
 
             
@@ -32,9 +71,9 @@ window.onload = function ()
             for (i = 0; i < txtNodes.length; i++)
                 for (j = 0; j < nodes.length; j++)
                     if (labels[j].attr('text') == txtNodes[i])
-                        nodes[j].attr({fill: "#01DF01"});
+                        nodes[j].attr({fill: green});
 
-            goal_test();
+            goal_test(obj);
 
 
                        
@@ -55,6 +94,9 @@ window.onload = function ()
         newholder.pathFld = obj.fld;
         newtxt.attr({text: fldTxt, font: "14px Fontin-Sans, Arial",
                     cursor: 'default'});
+        //var txtfld = $(newholder.node).append('<input type="text" value="0">');
+        //txtfld.focus();
+        set_priority(newtxt);
         newtxt.pair.click(choose_path);
         newtxt.click(choose_path);
         
@@ -65,7 +107,7 @@ window.onload = function ()
     var last="";
     var r = Raphael("holder", 2000, 1000);
     
-    var fld = r.text(220,10,"");
+    var fld = r.text(620,100,"");
     fld.attr({font: "14px Fontin-Sans, Arial"});
     var nodes = r.set();
     nodes.push(r.circle(20, 100, 20), // S
@@ -98,8 +140,6 @@ window.onload = function ()
         labels[i].pair = nodes[i];
         nodes[i].fld = fld;
         nodes[i].hnd = mk_fringe;
-        nodes[i].nodes = nodes;
-        nodes[i].labels = labels;
         }
     
     
