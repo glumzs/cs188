@@ -1,8 +1,29 @@
-var last_x = 0;
-var anspath_coord_x = 620;
-var anspath_coord_y= 100;
+
+var anspath_coord_x = 420;
+var anspath_coord_y= 20;
 var green = "#01DF01";
 var orange= "#FF9000";
+var white = "#FFF";
+
+function clear_highlight(code)
+    {
+    for (i = 0; i < code.length; i++)
+        {
+        $("#pqguide" + i).css('background-color',white);
+        }
+    }
+
+
+function search_problem()
+    {
+    this.last_x = 0;
+    this.last_y = 250;
+    this.paper_width = 600;
+    this.paper_height=1000;
+    this.pseudocode = [];
+    this.firstpass=1;
+    }
+
 
 function goal_test(obj)
     {
@@ -36,6 +57,8 @@ function set_priority(obj)
             {
             new_txt.removeCursor();
             $(document).unbind('keyup');
+            clear_highlight(obj.pair.problem.pseudocode);
+            $("#pqguide3").css('background-color',green);
             }
         else if (event.which >= 48 && event.which <= 57)
               {
@@ -60,8 +83,21 @@ function set_priority(obj)
             
 window.onload = function () 
     {
-        
+    var pq_search = new search_problem();        
+    pq_search.pseudocode = ["initialize priority queue",
+                            "loop do",
+                            "&nbsp;&nbsp;&nbsp;&nbsp;if there are no nodes for expansion return failure",
+                            "&nbsp;&nbsp;&nbsp;&nbsp;choose a leaf node for expansion according to strategy",
+                            "&nbsp;&nbsp;&nbsp;&nbsp;if the node contains a goal state return the solution",
+                            "&nbsp;&nbsp;&nbsp;&nbsp;else expand the node and add the resulting nodes to the priority queue",
+                            "end loop"];
     
+    for (i = 0; i < pq_search.pseudocode.length; i++)
+        {
+        $("#codeguide").append("<li id='pqguide" + i + "'>" + pq_search.pseudocode[i] + "</li>");
+        }
+    $("#pqguide0").css('background-color',green);
+    //$("#codeguide").sortable();
     
     var mk_fringe = function () {
         var choose_path = function () {
@@ -85,10 +121,15 @@ window.onload = function ()
         
             
         var obj = this.type == 'circle' ? this : this.pair;
-        var newholder = r.rect(window['last_x'], 250, 100, 30, 10);
+        var newholder = r.rect(pq_search.last_x, pq_search.last_y, 100, 30, 10);
         newholder.attr({fill: '#fff'});
-        var newtxt = r.text(window['last_x']+50,265);
-        window['last_x'] += 120;
+        var newtxt = r.text(pq_search.last_x+50,pq_search.last_y+15);
+        pq_search.last_x += 120;
+        if (pq_search.last_x >= pq_search.paper_width-120)
+            {
+            pq_search.last_x = 0;
+            pq_search.last_y += 50;
+            }
         var fldTxt = obj.fld.attr('text');
         if (fldTxt)
             fldTxt += '-';
@@ -98,11 +139,13 @@ window.onload = function ()
         newholder.pathFld = obj.fld;
         newtxt.attr({text: fldTxt, font: "14px Fontin-Sans, Arial",
                     cursor: 'default'});
+        newholder.problem = pq_search;
         
         set_priority(newtxt);
         newtxt.pair.click(choose_path);
         newtxt.click(choose_path);
-        
+        clear_highlight(pq_search.pseudocode);
+        $("#pqguide3").css('background-color',green);
         obj.attr({fill: orange});
         
     }
@@ -110,9 +153,9 @@ window.onload = function ()
     
     
     var last="";
-    var r = Raphael("holder", 850, 1000);
+    var r = Raphael("holder", pq_search.paper_width, pq_search.paper_height);
     
-    var fld = r.text(620,100,"");
+    var fld = r.text(anspath_coord_x,anspath_coord_y,"");
     fld.attr({font: "14px Fontin-Sans, Arial"});
     var nodes = r.set();
     nodes.push(r.circle(20, 100, 20), // S
@@ -145,6 +188,7 @@ window.onload = function ()
         labels[i].pair = nodes[i];
         nodes[i].fld = fld;
         nodes[i].hnd = mk_fringe;
+        nodes[i].problem = pq_search;
         }
     
     
