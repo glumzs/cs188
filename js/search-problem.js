@@ -5,6 +5,23 @@ var green = "#01DF01";
 var orange= "#FF9000";
 var white = "#FFF";
 
+
+function cluetip_hack()
+    {
+    var target = $("#pqguide0 a:eq(0)");
+    $(target
+    .data("events")
+    .click).each(function(i,e){
+        if(e.namespace === "cluetip" && e.type === "click"){
+            var pos = target.position();
+            alert(pos);
+            e
+                .handler
+                .apply(target, [{pageX:pos.left,pageY:pos.top}]);
+            }
+        });
+    }
+    
 function clear_highlight(code)
     {
     for (i = 0; i < code.length; i++)
@@ -84,7 +101,7 @@ function set_priority(obj)
 window.onload = function () 
     {
     var pq_search = new search_problem();        
-    pq_search.pseudocode = ["initialize priority queue",
+    pq_search.pseudocode = ['initialize priority queue<a href="" title="|Click on the start node|then type 0 or 1 to set|its priority and hit Enter"></a>',
                             "loop do",
                             "&nbsp;&nbsp;&nbsp;&nbsp;if there are no nodes for expansion return failure",
                             "&nbsp;&nbsp;&nbsp;&nbsp;choose a leaf node for expansion according to strategy",
@@ -92,12 +109,7 @@ window.onload = function ()
                             "&nbsp;&nbsp;&nbsp;&nbsp;else expand the node and add the resulting nodes to the priority queue",
                             "end loop"];
     
-    for (i = 0; i < pq_search.pseudocode.length; i++)
-        {
-        $("#codeguide").append("<li id='pqguide" + i + "'>" + pq_search.pseudocode[i] + "</li>");
-        }
-    $("#pqguide0").css('background-color',green);
-    //$("#codeguide").sortable();
+    
     
     var mk_fringe = function () {
         var choose_path = function () {
@@ -144,8 +156,15 @@ window.onload = function ()
         set_priority(newtxt);
         newtxt.pair.click(choose_path);
         newtxt.click(choose_path);
-        clear_highlight(pq_search.pseudocode);
-        $("#pqguide3").css('background-color',green);
+        
+        if (obj.pair.problem.firstpass == 1)
+            obj.pair.problem.firstpass = 0;
+        else
+            {
+            clear_highlight(pq_search.pseudocode);
+            $("#pqguide3").css('background-color',green);
+            }
+            
         obj.attr({fill: orange});
         
     }
@@ -196,4 +215,12 @@ window.onload = function ()
     labels.click(mk_fringe);
 
     $('div#holder').find('> svg,div').css({'border': '1px solid #f00'});
+    
+    for (i = 0; i < pq_search.pseudocode.length; i++)
+        {
+        $("#codeguide").append("<li id='pqguide" + i + "'>" + pq_search.pseudocode[i] + "</li>");
+        }
+    $("#pqguide0").css('background-color',green);
+    $('#pqguide0 a:eq(0)').cluetip({arrows: true, sticky: true, splitTitle: '|', cluetipClass: 'rounded', showTitle: false, activation: 'click'});
+    $('#pqguide0 a:eq(0)').trigger('click.cluetip');
     };
