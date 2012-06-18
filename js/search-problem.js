@@ -6,28 +6,27 @@ var orange= "#FF9000";
 var white = "#FFF";
 
 
-function cluetip_hack()
-    {
-    var target = $("#pqguide0 a:eq(0)");
-    $(target
-    .data("events")
-    .click).each(function(i,e){
-        if(e.namespace === "cluetip" && e.type === "click"){
-            var pos = target.position();
-            alert(pos);
-            e
-                .handler
-                .apply(target, [{pageX:pos.left,pageY:pos.top}]);
-            }
-        });
-    }
-    
 function clear_highlight(code)
     {
+    //$(document).trigger('hideClueTip');
     for (i = 0; i < code.length; i++)
         {
         $("#pqguide" + i).css('background-color',white);
         }
+    }
+    
+function highlight_line(problem,id)
+    {
+    clear_highlight(problem.pseudocode);
+    $("#pqguide"+id).css('background-color',green);
+    //show_hint(id);
+    }
+
+function show_hint(id)
+    {
+    $(document).trigger('hideClueTip');
+    if (id > -1)
+        $('#pqguide' + id + ' a:eq(0)').trigger('click.cluetip');
     }
 
 
@@ -74,8 +73,14 @@ function set_priority(obj)
             {
             new_txt.removeCursor();
             $(document).unbind('keyup');
-            clear_highlight(obj.pair.problem.pseudocode);
-            $("#pqguide3").css('background-color',green);
+            if (obj.pair.problem.firstpass)
+                {
+                clear_highlight(obj.pair.problem.pseudocode);
+                $("#pqguide3").css('background-color',green);
+                show_hint(3);
+                obj.pair.problem.firstpass = 0;
+                }
+            
             }
         else if (event.which >= 48 && event.which <= 57)
               {
@@ -104,13 +109,15 @@ window.onload = function ()
     pq_search.pseudocode = ['initialize priority queue<a href="" title="|Click on the start node|then type 0 or 1 to set|its priority and hit Enter"></a>',
                             "loop do",
                             "&nbsp;&nbsp;&nbsp;&nbsp;if there are no nodes for expansion return failure",
-                            "&nbsp;&nbsp;&nbsp;&nbsp;choose a leaf node for expansion according to strategy",
-                            "&nbsp;&nbsp;&nbsp;&nbsp;if the node contains a goal state return the solution",
-                            "&nbsp;&nbsp;&nbsp;&nbsp;else expand the node and add the resulting nodes to the priority queue",
+                            '&nbsp;&nbsp;&nbsp;&nbsp;choose a leaf node for expansion from the fringe<a href="" title="|Click on the partial|unxpanded plan with the top priority"></a>',
+                            '&nbsp;&nbsp;&nbsp;&nbsp;if the node contains a goal state return the solution<a href="" title="|If the node contains a goal state click on the Reached Goal button below. Otherwise click the Not A Goal button"></a>',
+                            '&nbsp;&nbsp;&nbsp;&nbsp;else expand the node<a  href="" title="Click on each node|you want to add,|enter priority.|Click the Continue|button after all nodes are added."></a>',
                             "end loop"];
-    
-    
-    
+    $("#reached_goal").button();
+    $("#not_goal").button();
+    $("#buttons").hide();
+    $("#continue_alg").button();
+    $("#continue_alg").hide();
     var mk_fringe = function () {
         var choose_path = function () {
             var obj = this.type == 'rect' ? this : this.pair;
@@ -125,7 +132,34 @@ window.onload = function ()
                     if (labels[j].attr('text') == txtNodes[i])
                         nodes[j].attr({fill: green});
 
-            //goal_test(obj);
+            highlight_line(obj.problem, 4);
+            show_hint(4);
+            $("#reached_goal").click(function() {
+                var r = obj.paper;
+                var ans_highlight = r.rect(anspath_coord_x-50, anspath_coord_y-12, 100, 30, 10);
+                ans_highlight.attr({stroke: green});
+                $("#buttons").hide();
+                $("#reached_goal").unbind("click");
+                clear_highlight(obj.problem.pseudocode);
+                show_hint(-1);
+                });
+            $("#not_goal").click(function() {
+                //highlight_line(obj.problem,5);
+                $("#buttons").hide();
+                $("#continue_alg").click(function() {
+                    highlight_line(obj.problem,3);
+                    show_hint(3);
+                    obj.attr({fill: "#848484"});
+                    $("#continue_alg").hide();
+                    $("#continue_alg").unbind('click');
+                });
+                $("#continue_alg").show();
+                highlight_line(obj.problem,5);
+                show_hint(5);
+                $("#not_goal").unbind("click");
+                $("#reached_goal").unbind("click");
+                });
+            $("#buttons").show();
 
 
                        
@@ -151,20 +185,18 @@ window.onload = function ()
         newholder.pathFld = obj.fld;
         newtxt.attr({text: fldTxt, font: "14px Fontin-Sans, Arial",
                     cursor: 'default'});
-        newholder.problem = pq_search;
+        newholder.problem = obj.problem;
         
         set_priority(newtxt);
         newtxt.pair.click(choose_path);
         newtxt.click(choose_path);
-        
-        if (obj.pair.problem.firstpass == 1)
-            obj.pair.problem.firstpass = 0;
+        /*if (obj.problem.firstpass == 1)
+            obj.problem.firstpass = 0;
         else
             {
             clear_highlight(pq_search.pseudocode);
             $("#pqguide3").css('background-color',green);
-            }
-            
+            }*/
         obj.attr({fill: orange});
         
     }
@@ -201,6 +233,7 @@ window.onload = function ()
     r.arrow(370,40,500,130,5); // C-G
     r.arrow(300,180,170,20,5); // D-B
     r.arrow(170,20,330,40,5); // B-C
+
     for (var i = 0, ii = nodes.length; i < ii; i++)
         {
         nodes[i].pair = labels[i];
@@ -210,17 +243,18 @@ window.onload = function ()
         nodes[i].problem = pq_search;
         }
     
-    
+    var pqlbl = r.text(60,230,"Priority Queue:");
+    pqlbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
     nodes.click(mk_fringe);
     labels.click(mk_fringe);
 
-    $('div#holder').find('> svg,div').css({'border': '1px solid #f00'});
+    //$('div#holder').find('> svg,div').css({'border': '1px solid #f00'});
     
     for (i = 0; i < pq_search.pseudocode.length; i++)
         {
         $("#codeguide").append("<li id='pqguide" + i + "'>" + pq_search.pseudocode[i] + "</li>");
+        $('#pqguide' + i + ' a:eq(0)').cluetip({arrows: true, sticky: true, splitTitle: '|', cluetipClass: 'rounded', showTitle: false, activation: 'click'});
         }
     $("#pqguide0").css('background-color',green);
-    $('#pqguide0 a:eq(0)').cluetip({arrows: true, sticky: true, splitTitle: '|', cluetipClass: 'rounded', showTitle: false, activation: 'click'});
-    $('#pqguide0 a:eq(0)').trigger('click.cluetip');
+    show_hint(0);
     };
