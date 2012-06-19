@@ -1,10 +1,17 @@
 
 var anspath_coord_x = 420;
 var anspath_coord_y= 20;
-var green = "#01DF01";
-var orange= "#FF9000";
-var white = "#FFF";
+var green = "#01df01";
+var orange= "#ff9000";
+var white = "#fff";
+var pqsearch_hintbox = "#pqsearch_showhints";
 
+function toggle_hints(code)
+    {
+    for (i = 0; i < code.length; i++)
+        if (RGBtoHEX($("#pqguide"+i).css('background-color')) == green)
+            $('#pqguide' + i + ' a:eq(0)').trigger('click.cluetip');
+    }
 
 function clear_highlight(code)
     {
@@ -24,8 +31,8 @@ function highlight_line(problem,id)
 
 function show_hint(id)
     {
-    $(document).trigger('hideClueTip');
-    if (id > -1)
+    //$(document).trigger('hideClueTip');
+    if (id > -1 && $(pqsearch_hintbox).attr('checked'))
         $('#pqguide' + id + ' a:eq(0)').trigger('click.cluetip');
     }
 
@@ -256,5 +263,20 @@ window.onload = function ()
         $('#pqguide' + i + ' a:eq(0)').cluetip({arrows: true, sticky: true, splitTitle: '|', cluetipClass: 'rounded', showTitle: false, activation: 'click'});
         }
     $("#pqguide0").css('background-color',green);
+    
+    $(pqsearch_hintbox).click(function() {
+        if($(pqsearch_hintbox).prop('checked'))
+            {
+            for (i = 0; i < pq_search.pseudocode.length; i++)
+                {
+                //console.log($("#pqguide"+i).css('background-color'));
+                if (RGBtoHEX($("#pqguide"+i).css('background-color')) == green)
+                    show_hint(i);
+                }
+            }
+        else
+            toggle_hints(pq_search.pseudocode);
+    });
+    
     show_hint(0);
     };
