@@ -1,12 +1,38 @@
 
 var anspath_coord_x = 420;
 var anspath_coord_y= 20;
+var curr_cons_x = 230;
+var curr_cons_y = 410;
 var green = "#01df01";
 var orange= "#ff9000";
 var white = "#fff";
+var black = "#000";
+var gray = "#848484";
 var pqsearch_hintbox = "#pqsearch_showhints";
-var arrow_size=5;
+var arrow_size=10;
 
+function rect_node_cl(r,x,y,problem,txt)
+    {
+    var newholder = r.rect(x, y, 100, 30, 10);
+    newholder.attr({fill: white});
+    var newtxt = r.text(x+50,y+15);
+    problem.exp_x += 120;
+    if (problem.exp_x >= problem.paper_width-120)
+        {
+        problem.exp_x = 0;
+        problem.exp_y += 50;
+        }
+    newtxt.attr({text: txt, font: "14px Fontin-Sans, Arial",
+                cursor: 'default'});
+    }
+
+
+function color_arrow(arrow,color)
+    {
+    arrow[0].attr({"stroke": color});
+    arrow[1].attr({"fill": color});
+    }
+    
 function toggle_hints(code)
     {
     for (i = 0; i < code.length; i++)
@@ -49,6 +75,10 @@ function search_problem()
     this.node_radius = 20;
     this.pseudocode = [];
     this.firstpass=1;
+    this.hedges = new Array;
+    this.hnodes = new Array;
+    this.exp_x = 105;
+    this.exp_y = curr_cons_y+40;
     }
 
 
@@ -133,15 +163,27 @@ window.onload = function ()
         var choose_path = function () {
             var obj = this.type == 'rect' ? this : this.pair;
             var myTxt = obj.pair.attr('text');
+            var graph_conf = obj.problem.graph_conf;
             
             obj.pathFld.attr({text: myTxt});
+            obj.problem.curr_fld.attr({text: myTxt});
             var txtNodes = myTxt.split("-");
             for (i = 0; i < nodes.length; i++)
                 nodes[i].attr({fill: white});
+            
+            for (i = 0; i < graph_conf.edges.length; i++)
+                color_arrow(pq_search.hedges[graph_conf.edges[i]],black);
+            
             for (i = 0; i < txtNodes.length; i++)
+                {
+                if (txtNodes[i] && txtNodes[i+1]
+                    && pq_search.hedges[txtNodes[i]+ txtNodes[i+1]])
+                    color_arrow(pq_search.hedges[txtNodes[i]+ txtNodes[i+1]],green);
+                
                 for (j = 0; j < nodes.length; j++)
                     if (labels[j].attr('text') == txtNodes[i])
                         nodes[j].attr({fill: green});
+                }
 
             highlight_line(obj.problem, 4);
             show_hint(4);
@@ -160,7 +202,9 @@ window.onload = function ()
                 $("#continue_alg").click(function() {
                     highlight_line(obj.problem,3);
                     show_hint(3);
-                    obj.attr({fill: "#848484"});
+                    obj.attr({fill: gray});
+                    obj.unclick(choose_path);
+                    rect_node_cl(obj.paper,obj.problem.exp_x,obj.problem.exp_y,obj.problem,obj.pair.attr('text'));
                     $("#continue_alg").hide();
                     $("#continue_alg").unbind('click');
                 });
@@ -216,12 +260,17 @@ window.onload = function ()
     
     var graph_conf = { "nodes": ["S","A","B","C","D","G"],
                        "edges": ["SA","SB","AD","DB","DC","CG","BC"]};
+    pq_search.graph_conf = graph_conf;
                        
     var num_interm_nodes = graph_conf.nodes.length - 2;
     var r = Raphael("holder", pq_search.paper_width, pq_search.paper_height);
     
     var fld = r.text(anspath_coord_x,anspath_coord_y,"");
     fld.attr({font: "14px Fontin-Sans, Arial"});
+    
+    pq_search.curr_fld = r.text(curr_cons_x,curr_cons_y,"");
+    pq_search.curr_fld.attr({font: "14px Fontin-Sans, Arial"});
+    
     
     var nodes = r.set();
     var labels = r.set();
@@ -272,6 +321,7 @@ window.onload = function ()
     
     // Draw the edges
     var edges = r.set();
+    var hedges = new Array;
     for (i=0;i<graph_conf.edges.length;i++)
         {
         var s_node = graph_conf.edges[i].charAt(0);
@@ -297,6 +347,8 @@ window.onload = function ()
             }
         else if (hnodes[s_node].attr('cx') > hnodes[e_node].attr('cx')) // forward to back
             {
+            from_x = hnodes[s_node].attr('cx')-20;
+            to_x = hnodes[e_node].attr('cx')+20;
             if (hnodes[s_node].attr('cy') < hnodes[e_node].attr('cy')) //top to bottom
                 {
                 from_y = hnodes[s_node].attr('cy')+20;
@@ -314,10 +366,19 @@ window.onload = function ()
                 }
                 
             }
-        edges.push(r.arrow(from_x,from_y,to_x,to_y,arrow_size));
-        //console.log(from_x,from_y,to_x,to_y);
+        else // going forward
+            {
+            from_x = hnodes[s_node].attr('cx')+20;
+            to_x = hnodes[e_node].attr('cx')-20;
+            from_y = hnodes[s_node].attr('cy');
+            to_y = hnodes[e_node].attr('cy');
+            }
+        hedges[graph_conf.edges[i]]=r.arrow(from_x,from_y,to_x,to_y,arrow_size);
+    
         }
-
+    
+    pq_search.hnodes = hnodes;
+    pq_search.hedges = hedges;
     
    
     for (var i = 0, ii = nodes.length; i < ii; i++)
@@ -331,6 +392,17 @@ window.onload = function ()
     
     var pqlbl = r.text(60,230,"Priority Queue:");
     pqlbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
+    
+    var currlbl = r.text(curr_cons_x-145,curr_cons_y,"Node currently considered:");
+    currlbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
+    
+    var explbl = r.text(pq_search.exp_x,pq_search.exp_y,"Nodes that have been expanded:");
+    explbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
+    pq_search.exp_x = 0;
+    pq_search.exp_y += 20;
+    
+    var curr_highlight = r.rect(curr_cons_x-50, curr_cons_y-12, 100, 30, 10);
+    
     nodes.click(mk_fringe);
     labels.click(mk_fringe);
 
