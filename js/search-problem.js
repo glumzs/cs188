@@ -14,17 +14,18 @@ var arrow_size=10;
 function rect_node_cl(r,x,y,problem,txt)
     {
     var newholder = r.rect(x, y, 100, 30, 10);
-    newholder.attr({fill: white});
+    newholder.attr({'fill': white, 'stroke-width': 3});
     var newtxt = r.text(x+50,y+15);
     problem.exp_x += 120;
     if (problem.exp_x >= problem.paper_width-120)
         {
-        problem.exp_x = 0;
+        problem.exp_x = 3;
         problem.exp_y += 50;
         }
     newtxt.attr({text: txt, font: "14px Fontin-Sans, Arial",
                 cursor: 'default'});
     }
+    
 
 
 function color_arrow(arrow,color)
@@ -36,7 +37,7 @@ function color_arrow(arrow,color)
 function toggle_hints(code)
     {
     for (i = 0; i < code.length; i++)
-        if (RGBtoHEX($("#pqguide"+i).css('background-color')) == green)
+        if (RGBtoHEX($("#pqguide"+i).css('background-color')) == gray)
             $('#pqguide' + i + ' a:eq(0)').trigger('click.cluetip');
     }
 
@@ -52,7 +53,7 @@ function clear_highlight(code)
 function highlight_line(problem,id)
     {
     clear_highlight(problem.pseudocode);
-    $("#pqguide"+id).css('background-color',green);
+    $("#pqguide"+id).css('background-color',gray);
     //show_hint(id);
     }
 
@@ -66,7 +67,7 @@ function show_hint(id)
 
 function search_problem()
     {
-    this.last_x = 0;
+    this.last_x = 3;
     this.last_y = 250;
     this.paper_width = 600;
     this.paper_height=1000;
@@ -79,6 +80,8 @@ function search_problem()
     this.hnodes = new Array;
     this.exp_x = 105;
     this.exp_y = curr_cons_y+40;
+    this.nodes = null;
+    this.labels = null;
     }
 
 
@@ -88,8 +91,8 @@ function goal_test(obj)
 
     var search_done = function() {
         var r = obj.paper;
-        var ans_highlight = r.rect(anspath_coord_x-50, anspath_coord_y-12, 100, 30, 10);
-        ans_highlight.attr({stroke: green});
+        //var ans_highlight = r.rect(anspath_coord_x-50, anspath_coord_y-12, 100, 30, 10);
+        //ans_highlight.attr({stroke: green});
         $(this).dialog("close");
     }
     var $dialog = $('<div id="goaltest"></div>')
@@ -117,7 +120,8 @@ function set_priority(obj)
             if (obj.pair.problem.firstpass)
                 {
                 clear_highlight(obj.pair.problem.pseudocode);
-                $("#pqguide3").css('background-color',green);
+                //$("#pqguide3").css('background-color',green);
+                highlight_line(obj.pair.problem,3);
                 show_hint(3);
                 obj.pair.problem.firstpass = 0;
                 }
@@ -139,7 +143,7 @@ function set_priority(obj)
     new_txt.click(edit_fld);
     $(document).keyup( handle_key);
     
-    //new_txt.attr({"font": "14px Fontin-Sans, Arial", "font-weight": "bold", "text": "|"});
+    new_txt.attr({"font": "14px Fontin-Sans, Arial", "font-weight": "bold"});
     }
 
             
@@ -147,10 +151,10 @@ function set_priority(obj)
 window.onload = function () 
     {
     var pq_search = new search_problem();        
-    pq_search.pseudocode = ['initialize priority queue<a href="" title="|Click on the start node|then type 0 or 1 to set|its priority and hit Enter"></a>',
+    pq_search.pseudocode = ['initialize priority queue<a href="" title="|click on the start node, S, and then enter 0 for its priority"></a>',
                             "loop do",
                             "&nbsp;&nbsp;&nbsp;&nbsp;if there are no nodes for expansion return failure",
-                            '&nbsp;&nbsp;&nbsp;&nbsp;choose a leaf node for expansion from the fringe<a href="" title="|Click on the partial|unxpanded plan with the top priority"></a>',
+                            '&nbsp;&nbsp;&nbsp;&nbsp;pop node from the priority queue for expansion<a href="" title="|Click on the partial|unxpanded plan with the top priority"></a>',
                             '&nbsp;&nbsp;&nbsp;&nbsp;if the node contains a goal state return the solution<a href="" title="|If the node contains a goal state click on the Reached Goal button below. Otherwise click the Not A Goal button"></a>',
                             '&nbsp;&nbsp;&nbsp;&nbsp;else expand the node<a  href="" title="Click on each node|you want to add,|enter priority.|Click the Continue|button after all nodes are added."></a>',
                             "end loop"];
@@ -189,8 +193,8 @@ window.onload = function ()
             show_hint(4);
             $("#reached_goal").click(function() {
                 var r = obj.paper;
-                var ans_highlight = r.rect(anspath_coord_x-50, anspath_coord_y-12, 100, 30, 10);
-                ans_highlight.attr({stroke: green});
+                //var ans_highlight = r.rect(anspath_coord_x-50, anspath_coord_y-12, 100, 30, 10);
+                //ans_highlight.attr({stroke: green});
                 $("#buttons").hide();
                 $("#reached_goal").unbind("click");
                 clear_highlight(obj.problem.pseudocode);
@@ -207,29 +211,30 @@ window.onload = function ()
                     rect_node_cl(obj.paper,obj.problem.exp_x,obj.problem.exp_y,obj.problem,obj.pair.attr('text'));
                     obj.problem.curr_fld.attr({'text': ""});
                     $("#continue_alg").hide();
-                    $("#continue_alg").unbind('click');
+                    $("#continue_alg").unbind('click');  
                 });
                 $("#continue_alg").show();
                 highlight_line(obj.problem,5);
                 show_hint(5);
                 $("#not_goal").unbind("click");
                 $("#reached_goal").unbind("click");
+                obj.problem.nodes.click(mk_fringe);
+                obj.problem.labels.click(mk_fringe); 
                 });
             $("#buttons").show();
-
-
-                       
+            obj.problem.nodes.unclick(mk_fringe);
+            obj.problem.labels.unclick(mk_fringe);                     
         }
         
             
         var obj = this.type == 'circle' ? this : this.pair;
-        var newholder = r.rect(pq_search.last_x, pq_search.last_y, 100, 30, 10);
-        newholder.attr({fill: '#fff'});
+        var newholder = r.rect(pq_search.last_x, pq_search.last_y, 110, 30, 10);
+        newholder.attr({'fill': white, 'stroke-width': 3});
         var newtxt = r.text(pq_search.last_x+50,pq_search.last_y+15);
-        pq_search.last_x += 120;
+        pq_search.last_x += 130;
         if (pq_search.last_x >= pq_search.paper_width-120)
             {
-            pq_search.last_x = 0;
+            pq_search.last_x = 3;
             pq_search.last_y += 50;
             }
         var fldTxt = obj.fld.attr('text');
@@ -266,8 +271,8 @@ window.onload = function ()
     var num_interm_nodes = graph_conf.nodes.length - 2;
     var r = Raphael("holder", pq_search.paper_width, pq_search.paper_height);
     
-    var fld = r.text(anspath_coord_x,anspath_coord_y,"");
-    fld.attr({font: "14px Fontin-Sans, Arial"});
+    //var fld = r.text(anspath_coord_x,anspath_coord_y,"");
+    //fld.attr({font: "14px Fontin-Sans, Arial"});
     
     pq_search.curr_fld = r.text(curr_cons_x,curr_cons_y,"");
     pq_search.curr_fld.attr({font: "14px Fontin-Sans, Arial"});
@@ -386,7 +391,7 @@ window.onload = function ()
         {
         nodes[i].pair = labels[i];
         labels[i].pair = nodes[i];
-        nodes[i].fld = fld;
+        nodes[i].fld = pq_search.curr_fld;
         nodes[i].hnd = mk_fringe;
         nodes[i].problem = pq_search;
         }
@@ -399,14 +404,16 @@ window.onload = function ()
     
     var explbl = r.text(pq_search.exp_x,pq_search.exp_y,"Nodes that have been expanded:");
     explbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
-    pq_search.exp_x = 0;
+    pq_search.exp_x = 3;
     pq_search.exp_y += 20;
     
-    var curr_highlight = r.rect(curr_cons_x-50, curr_cons_y-12, 100, 30, 10);
+    var curr_highlight = r.rect(curr_cons_x-50, curr_cons_y-12, 110, 30, 10);
+    curr_highlight.attr({'stroke-width': 3});
     
     nodes.click(mk_fringe);
     labels.click(mk_fringe);
-
+    pq_search.nodes = nodes;
+    pq_search.labels = labels;
     //$('div#holder').find('> svg,div').css({'border': '1px solid #f00'});
     
     for (i = 0; i < pq_search.pseudocode.length; i++)
@@ -414,14 +421,15 @@ window.onload = function ()
         $("#codeguide").append("<li id='pqguide" + i + "'>" + pq_search.pseudocode[i] + "</li>");
         $('#pqguide' + i + ' a:eq(0)').cluetip({arrows: true, sticky: true, splitTitle: '|', cluetipClass: 'rounded', showTitle: false, activation: 'click'});
         }
-    $("#pqguide0").css('background-color',green);
+    //$("#pqguide0").css('background-color',green);
+    highlight_line(pq_search,0);
     
     $(pqsearch_hintbox).click(function() {
         if($(pqsearch_hintbox).prop('checked'))
             {
             for (i = 0; i < pq_search.pseudocode.length; i++)
                 {
-                if (RGBtoHEX($("#pqguide"+i).css('background-color')) == green)
+                if (RGBtoHEX($("#pqguide"+i).css('background-color')) == gray)
                     show_hint(i);
                 }
             }
