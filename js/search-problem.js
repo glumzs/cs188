@@ -205,6 +205,7 @@ window.onload = function ()
                     obj.attr({fill: gray});
                     obj.unclick(choose_path);
                     rect_node_cl(obj.paper,obj.problem.exp_x,obj.problem.exp_y,obj.problem,obj.pair.attr('text'));
+                    obj.problem.curr_fld.attr({'text': ""});
                     $("#continue_alg").hide();
                     $("#continue_alg").unbind('click');
                 });
