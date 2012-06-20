@@ -5,6 +5,7 @@ var green = "#01df01";
 var orange= "#ff9000";
 var white = "#fff";
 var pqsearch_hintbox = "#pqsearch_showhints";
+var arrow_size=5;
 
 function toggle_hints(code)
     {
@@ -43,6 +44,9 @@ function search_problem()
     this.last_y = 250;
     this.paper_width = 600;
     this.paper_height=1000;
+    this.graph_height=200;
+    this.graph_width= 550;
+    this.node_radius = 20;
     this.pseudocode = [];
     this.firstpass=1;
     }
@@ -133,7 +137,7 @@ window.onload = function ()
             obj.pathFld.attr({text: myTxt});
             var txtNodes = myTxt.split("-");
             for (i = 0; i < nodes.length; i++)
-                nodes[i].attr({fill: "#000"});
+                nodes[i].attr({fill: white});
             for (i = 0; i < txtNodes.length; i++)
                 for (j = 0; j < nodes.length; j++)
                     if (labels[j].attr('text') == txtNodes[i])
@@ -210,37 +214,112 @@ window.onload = function ()
     
     
     
-    var last="";
+    var graph_conf = { "nodes": ["S","A","B","C","D","G"],
+                       "edges": ["SA","SB","AD","DB","DC","CG","BC"]};
+                       
+    var num_interm_nodes = graph_conf.nodes.length - 2;
     var r = Raphael("holder", pq_search.paper_width, pq_search.paper_height);
     
     var fld = r.text(anspath_coord_x,anspath_coord_y,"");
     fld.attr({font: "14px Fontin-Sans, Arial"});
+    
     var nodes = r.set();
-    nodes.push(r.circle(20, 100, 20), // S
-       r.circle(150, 20, 20), // A
-       r.circle(150, 200, 20), // B
-       r.circle(350,40,20), // C
-       r.circle(300,200,20), // D
-       r.circle(500,150,20) // G
-       );
-    nodes.attr({fill: "#000", stroke: "#fff", "stroke-dasharray": "- ", opacity: .2});
     var labels = r.set();
-    labels.push(r.text(20, 100, "S"),
-                r.text(150,20,"B"),
-                r.text(150,200,"A"),
-                r.text(350,40,"C"),
-                r.text(300,200,"D"),
-                r.text(500,150,"G")
-                );
-    labels.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
-    r.arrow(40,100,130,20,5); // S-B
-    r.arrow(40,100,130,200,5); // S-A
-    r.arrow(170,200,280,200,5); // A-D
-    r.arrow(300,180,350,60,5); // D-C
-    r.arrow(370,40,500,130,5); // C-G
-    r.arrow(300,180,170,20,5); // D-B
-    r.arrow(170,20,330,40,5); // B-C
+    
+    var hnodes = new Array;
+    
+    // Starting node always in the left middle
+    nodes.push(r.circle(3+pq_search.node_radius,pq_search.graph_height/2,pq_search.node_radius));
+    labels.push(r.text(nodes[0].attr('cx'),nodes[0].attr('cy'),graph_conf.nodes[0]));
+    hnodes[graph_conf.nodes[0]] = nodes[0];
+    
+    
+    var interm_nodes_startx = 3+2*pq_search.node_radius;
+    var interm_nodes_endx = pq_search.graph_width-2*pq_search.node_radius-3;
+    var space_avail = interm_nodes_endx-interm_nodes_startx;
+    var num_bottom_nodes = parseInt(num_interm_nodes/2);
+    var num_top_nodes = num_interm_nodes-num_bottom_nodes;
+    var space_between_bottom = space_avail/(num_bottom_nodes+1);
+    var space_between_top = space_avail/(num_top_nodes+1);
 
+    
+    var curr_x = interm_nodes_startx+space_between_bottom;
+    var curr_y = pq_search.graph_height-pq_search.node_radius-3;
+    var pos = 0; // 0 - bottom, 1 - top
+    for (i = 1; i <num_interm_nodes+1; i++)
+        {
+        if (pos)
+            curr_y = pq_search.node_radius+3;
+        else
+            curr_y = pq_search.graph_height-pq_search.node_radius-3;
+            
+        nodes.push(r.circle(curr_x,curr_y,pq_search.node_radius));
+        labels.push(r.text(nodes[i].attr('cx'),nodes[i].attr('cy'),graph_conf.nodes[i]));
+        hnodes[graph_conf.nodes[i]] = nodes[nodes.length-1];
+        pos = pos == 1 ? 0 : 1;
+        if (!pos)
+            curr_x += space_between_bottom;
+        }
+    
+    // Goal node in the right middle
+    nodes.push(r.circle(pq_search.graph_width-pq_search.node_radius-3,pq_search.graph_height/2,pq_search.node_radius));
+    labels.push(r.text(nodes[5].attr('cx'),nodes[5].attr('cy'),graph_conf.nodes[5]));
+    hnodes[graph_conf.nodes[5]] = nodes[5];
+    
+    //nodes.attr({fill: "#000", stroke: "#fff", "stroke-dasharray": "- ", opacity: .2});
+    nodes.attr({"fill": white, "stroke-width": 3});
+    labels.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
+    
+    // Draw the edges
+    var edges = r.set();
+    for (i=0;i<graph_conf.edges.length;i++)
+        {
+        var s_node = graph_conf.edges[i].charAt(0);
+        var e_node = graph_conf.edges[i].charAt(1);
+        var from_x=0, from_y=0,to_x=0,to_y = 0;
+        
+        if (hnodes[s_node].attr('cx') == hnodes[e_node].attr('cx')) // same x
+            {
+                
+            from_x = to_x = hnodes[s_node].attr('cx');
+            if (hnodes[s_node].attr('cy') > hnodes[e_node].attr('cy')) //bottom to top
+                {
+                console.log("bottom to top ",s_node,e_node);
+                from_y = hnodes[s_node].attr('cy')-20;
+                to_y = hnodes[e_node].attr('cy')+20;
+                }
+            else // top to bottom
+                {
+                console.log("top to bottom",s_node,e_node);
+                from_y = hnodes[s_node].attr('cy')+20;
+                to_y = hnodes[e_node].attr('cy')-20;
+                }
+            }
+        else if (hnodes[s_node].attr('cx') > hnodes[e_node].attr('cx')) // forward to back
+            {
+            if (hnodes[s_node].attr('cy') < hnodes[e_node].attr('cy')) //top to bottom
+                {
+                from_y = hnodes[s_node].attr('cy')+20;
+                to_y = hnodes[e_node].attr('cy')-20;
+                }
+            else if (hnodes[s_node].attr('cy') > hnodes[e_node].attr('cy')) //bottom to top
+                {
+                from_y = hnodes[s_node].attr('cy')-20;
+                to_y = hnodes[e_node].attr('cy')+20;
+                }
+            else
+                {
+                from_y = hnodes[s_node].attr('cy');
+                to_y = hnodes[e_node].attr('cy');
+                }
+                
+            }
+        edges.push(r.arrow(from_x,from_y,to_x,to_y,arrow_size));
+        //console.log(from_x,from_y,to_x,to_y);
+        }
+
+    
+   
     for (var i = 0, ii = nodes.length; i < ii; i++)
         {
         nodes[i].pair = labels[i];
@@ -269,7 +348,6 @@ window.onload = function ()
             {
             for (i = 0; i < pq_search.pseudocode.length; i++)
                 {
-                //console.log($("#pqguide"+i).css('background-color'));
                 if (RGBtoHEX($("#pqguide"+i).css('background-color')) == green)
                     show_hint(i);
                 }
