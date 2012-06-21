@@ -72,7 +72,7 @@ function search_problem()
     this.paper_width = 600;
     this.paper_height=1000;
     this.graph_height=200;
-    this.graph_width= 550;
+    this.graph_width= 400;
     this.node_radius = 20;
     this.pseudocode = [];
     this.firstpass=1;
@@ -82,6 +82,8 @@ function search_problem()
     this.exp_y = curr_cons_y+40;
     this.nodes = null;
     this.labels = null;
+    this.pqset = null;
+    this.draw_graph = draw_search_graph;
     }
 
 
@@ -223,7 +225,12 @@ window.onload = function ()
                 });
             $("#buttons").show();
             obj.problem.nodes.unclick(mk_fringe);
-            obj.problem.labels.unclick(mk_fringe);                     
+            obj.problem.labels.unclick(mk_fringe);
+            console.log(obj.problem.pqset.length);
+            obj.problem.pqset.unclick(choose_path);
+            obj.problem.pqset.unclick(choose_path);
+            obj.problem.pqset.unclick(choose_path);
+            obj.problem.pqset.unclick(choose_path);
         }
         
             
@@ -251,6 +258,7 @@ window.onload = function ()
         set_priority(newtxt);
         newtxt.pair.click(choose_path);
         newtxt.click(choose_path);
+        pq_search.pqset.push(newholder,newtxt);
         /*if (obj.problem.firstpass == 1)
             obj.problem.firstpass = 0;
         else
@@ -262,129 +270,20 @@ window.onload = function ()
         
     }
     
-    
-    
     var graph_conf = { "nodes": ["S","A","B","C","D","G"],
                        "edges": ["SA","SB","AD","DB","DC","CG","BC"]};
     pq_search.graph_conf = graph_conf;
-                       
-    var num_interm_nodes = graph_conf.nodes.length - 2;
+        
     var r = Raphael("holder", pq_search.paper_width, pq_search.paper_height);
-    
-    //var fld = r.text(anspath_coord_x,anspath_coord_y,"");
-    //fld.attr({font: "14px Fontin-Sans, Arial"});
-    
+     
     pq_search.curr_fld = r.text(curr_cons_x,curr_cons_y,"");
     pq_search.curr_fld.attr({font: "14px Fontin-Sans, Arial"});
-    
-    
+    //pq_search.draw_graph = draw_search_graph;
     var nodes = r.set();
     var labels = r.set();
-    
-    var hnodes = new Array;
-    
-    // Starting node always in the left middle
-    nodes.push(r.circle(3+pq_search.node_radius,pq_search.graph_height/2,pq_search.node_radius));
-    labels.push(r.text(nodes[0].attr('cx'),nodes[0].attr('cy'),graph_conf.nodes[0]));
-    hnodes[graph_conf.nodes[0]] = nodes[0];
-    
-    
-    var interm_nodes_startx = 3+2*pq_search.node_radius;
-    var interm_nodes_endx = pq_search.graph_width-2*pq_search.node_radius-3;
-    var space_avail = interm_nodes_endx-interm_nodes_startx;
-    var num_bottom_nodes = parseInt(num_interm_nodes/2);
-    var num_top_nodes = num_interm_nodes-num_bottom_nodes;
-    var space_between_bottom = space_avail/(num_bottom_nodes+1);
-    var space_between_top = space_avail/(num_top_nodes+1);
-
-    
-    var curr_x = interm_nodes_startx+space_between_bottom;
-    var curr_y = pq_search.graph_height-pq_search.node_radius-3;
-    var pos = 0; // 0 - bottom, 1 - top
-    for (i = 1; i <num_interm_nodes+1; i++)
-        {
-        if (pos)
-            curr_y = pq_search.node_radius+3;
-        else
-            curr_y = pq_search.graph_height-pq_search.node_radius-3;
-            
-        nodes.push(r.circle(curr_x,curr_y,pq_search.node_radius));
-        labels.push(r.text(nodes[i].attr('cx'),nodes[i].attr('cy'),graph_conf.nodes[i]));
-        hnodes[graph_conf.nodes[i]] = nodes[nodes.length-1];
-        pos = pos == 1 ? 0 : 1;
-        if (!pos)
-            curr_x += space_between_bottom;
-        }
-    
-    // Goal node in the right middle
-    nodes.push(r.circle(pq_search.graph_width-pq_search.node_radius-3,pq_search.graph_height/2,pq_search.node_radius));
-    labels.push(r.text(nodes[5].attr('cx'),nodes[5].attr('cy'),graph_conf.nodes[5]));
-    hnodes[graph_conf.nodes[5]] = nodes[5];
-    
-    //nodes.attr({fill: "#000", stroke: "#fff", "stroke-dasharray": "- ", opacity: .2});
-    nodes.attr({"fill": white, "stroke-width": 3});
-    labels.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
-    
-    // Draw the edges
-    var edges = r.set();
-    var hedges = new Array;
-    for (i=0;i<graph_conf.edges.length;i++)
-        {
-        var s_node = graph_conf.edges[i].charAt(0);
-        var e_node = graph_conf.edges[i].charAt(1);
-        var from_x=0, from_y=0,to_x=0,to_y = 0;
-        
-        if (hnodes[s_node].attr('cx') == hnodes[e_node].attr('cx')) // same x
-            {
-                
-            from_x = to_x = hnodes[s_node].attr('cx');
-            if (hnodes[s_node].attr('cy') > hnodes[e_node].attr('cy')) //bottom to top
-                {
-                console.log("bottom to top ",s_node,e_node);
-                from_y = hnodes[s_node].attr('cy')-20;
-                to_y = hnodes[e_node].attr('cy')+20;
-                }
-            else // top to bottom
-                {
-                console.log("top to bottom",s_node,e_node);
-                from_y = hnodes[s_node].attr('cy')+20;
-                to_y = hnodes[e_node].attr('cy')-20;
-                }
-            }
-        else if (hnodes[s_node].attr('cx') > hnodes[e_node].attr('cx')) // forward to back
-            {
-            from_x = hnodes[s_node].attr('cx')-20;
-            to_x = hnodes[e_node].attr('cx')+20;
-            if (hnodes[s_node].attr('cy') < hnodes[e_node].attr('cy')) //top to bottom
-                {
-                from_y = hnodes[s_node].attr('cy')+20;
-                to_y = hnodes[e_node].attr('cy')-20;
-                }
-            else if (hnodes[s_node].attr('cy') > hnodes[e_node].attr('cy')) //bottom to top
-                {
-                from_y = hnodes[s_node].attr('cy')-20;
-                to_y = hnodes[e_node].attr('cy')+20;
-                }
-            else
-                {
-                from_y = hnodes[s_node].attr('cy');
-                to_y = hnodes[e_node].attr('cy');
-                }
-                
-            }
-        else // going forward
-            {
-            from_x = hnodes[s_node].attr('cx')+20;
-            to_x = hnodes[e_node].attr('cx')-20;
-            from_y = hnodes[s_node].attr('cy');
-            to_y = hnodes[e_node].attr('cy');
-            }
-        hedges[graph_conf.edges[i]]=r.arrow(from_x,from_y,to_x,to_y,arrow_size);
-    
-        }
-    
-    pq_search.hnodes = hnodes;
-    pq_search.hedges = hedges;
+ 
+    // draw graph
+    pq_search.draw_graph(r,nodes,labels);
     
    
     for (var i = 0, ii = nodes.length; i < ii; i++)
@@ -414,6 +313,7 @@ window.onload = function ()
     labels.click(mk_fringe);
     pq_search.nodes = nodes;
     pq_search.labels = labels;
+    pq_search.pqset = r.set();
     //$('div#holder').find('> svg,div').css({'border': '1px solid #f00'});
     
     for (i = 0; i < pq_search.pseudocode.length; i++)

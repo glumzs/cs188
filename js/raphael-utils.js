@@ -44,3 +44,107 @@ Raphael.el.removeCursor = function () {
             return clearInterval(this.cursor.blinker), $(this.cursor.node).remove(), delete this.cursor
         };
 
+var draw_search_graph = function (r,nodes,labels)
+    {
+    // Starting node always in the left middle
+    nodes.push(r.circle(3+this.node_radius,this.graph_height/2,this.node_radius));
+    labels.push(r.text(nodes[0].attr('cx'),nodes[0].attr('cy'),this.graph_conf.nodes[0]));
+    this.hnodes[this.graph_conf.nodes[0]] = nodes[0];
+    
+    var num_interm_nodes = this.graph_conf.nodes.length - 2;
+    var interm_nodes_startx = 3+2*this.node_radius;
+    var interm_nodes_endx = this.graph_width-2*this.node_radius-3;
+    var space_avail = interm_nodes_endx-interm_nodes_startx;
+    var num_bottom_nodes = parseInt(num_interm_nodes/2);
+    var num_top_nodes = num_interm_nodes-num_bottom_nodes;
+    var space_between_bottom = (space_avail+num_bottom_nodes*this.node_radius)/(num_bottom_nodes+1);
+    var space_between_top = space_avail/(num_top_nodes+1);
+    
+    console.log(space_between_bottom);
+    var curr_x = interm_nodes_startx+space_between_bottom;
+    var curr_y = this.graph_height-this.node_radius-3;
+    var pos = 0; // 0 - bottom, 1 - top
+    
+    
+    for (i = 1; i <num_interm_nodes+1; i++)
+        {
+        if (pos)
+            curr_y = this.node_radius+3;
+        else
+            curr_y = this.graph_height-this.node_radius-3;
+          
+        nodes.push(r.circle(curr_x,curr_y,this.node_radius));
+        labels.push(r.text(nodes[i].attr('cx'),nodes[i].attr('cy'),this.graph_conf.nodes[i]));
+        this.hnodes[this.graph_conf.nodes[i]] = nodes[nodes.length-1];
+        pos = pos == 1 ? 0 : 1;
+        if (!pos)
+            curr_x += space_between_bottom;
+        }
+    
+    // Goal node in the right middle
+    nodes.push(r.circle(this.graph_width-this.node_radius-3,this.graph_height/2,this.node_radius));
+    labels.push(r.text(nodes[5].attr('cx'),nodes[5].attr('cy'),this.graph_conf.nodes[5]));
+    this.hnodes[this.graph_conf.nodes[5]] = nodes[5];
+    
+    //nodes.attr({fill: "#000", stroke: "#fff", "stroke-dasharray": "- ", opacity: .2});
+    nodes.attr({"fill": white, "stroke-width": 3});
+    labels.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
+    
+    // Draw the edges
+
+    for (i=0;i<this.graph_conf.edges.length;i++)
+        {
+        var s_node = this.graph_conf.edges[i].charAt(0);
+        var e_node = this.graph_conf.edges[i].charAt(1);
+        var from_x=0, from_y=0,to_x=0,to_y = 0;
+        
+        if (this.hnodes[s_node].attr('cx') == this.hnodes[e_node].attr('cx')) // same x
+            {
+                
+            from_x = to_x = this.hnodes[s_node].attr('cx');
+            if (this.hnodes[s_node].attr('cy') > this.hnodes[e_node].attr('cy')) //bottom to top
+                {
+                console.log("bottom to top ",s_node,e_node);
+                from_y = this.hnodes[s_node].attr('cy')-20;
+                to_y = this.hnodes[e_node].attr('cy')+20;
+                }
+            else // top to bottom
+                {
+                console.log("top to bottom",s_node,e_node);
+                from_y = this.hnodes[s_node].attr('cy')+20;
+                to_y = this.hnodes[e_node].attr('cy')-20;
+                }
+            }
+        else if (this.hnodes[s_node].attr('cx') > this.hnodes[e_node].attr('cx')) // forward to back
+            {
+            from_x = this.hnodes[s_node].attr('cx')-20;
+            to_x = this.hnodes[e_node].attr('cx')+20;
+            if (this.hnodes[s_node].attr('cy') < this.hnodes[e_node].attr('cy')) //top to bottom
+                {
+                from_y = this.hnodes[s_node].attr('cy')+20;
+                to_y = this.hnodes[e_node].attr('cy')-20;
+                }
+            else if (this.hnodes[s_node].attr('cy') > this.hnodes[e_node].attr('cy')) //bottom to top
+                {
+                from_y = this.hnodes[s_node].attr('cy')-20;
+                to_y = this.hnodes[e_node].attr('cy')+20;
+                }
+            else
+                {
+                from_y = this.hnodes[s_node].attr('cy');
+                to_y = this.hnodes[e_node].attr('cy');
+                }
+                
+            }
+        else // going forward
+            {
+            from_x = this.hnodes[s_node].attr('cx')+20;
+            to_x = this.hnodes[e_node].attr('cx')-20;
+            from_y = this.hnodes[s_node].attr('cy');
+            to_y = this.hnodes[e_node].attr('cy');
+            }
+        this.hedges[this.graph_conf.edges[i]]=r.arrow(from_x,from_y,to_x,to_y,arrow_size);
+    
+        }
+    
+    }
