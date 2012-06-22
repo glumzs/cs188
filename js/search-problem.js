@@ -359,7 +359,7 @@ window.onload = function ()
                 if (pq_search.current_node.charAt(pq_search.current_node.length-1) == "G")
                     {
                     pq_search.alg_state="goal_reached";
-                    //highlight_line(pq_search,7,green);
+                    highlight_line(pq_search,7);
                     $("#current_node").css('background-color',green);
                     }
                 else
