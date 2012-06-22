@@ -28,6 +28,26 @@ function rect_node_cl(r,x,y,problem,txt)
                 cursor: 'default'});
     }
     
+function highlight_path(problem,path)
+    {
+    for (i = 0; i < problem.nodes.length; i++)
+        problem.nodes[i].attr({fill: white});
+    
+    for (i = 0; i < problem.graph_conf.edges.length; i++)
+        color_arrow(problem.hedges[problem.graph_conf.edges[i]],black);
+    
+    for (i = 0; i < path.length; i++)
+        {
+        if (path[i] && path[i+1]
+            && problem.hedges[path[i]+ path[i+1]])
+            color_arrow(problem.hedges[path[i]+ path[i+1]],green);
+        
+        for (j = 0; j < problem.nodes.length; j++)
+            if (problem.labels[j].attr('text') == path[i])
+                problem.nodes[j].attr({fill: green});
+        }
+    }
+    
 
 
 function color_arrow(arrow,color)
@@ -353,16 +373,17 @@ window.onload = function ()
                 pq_search.current_node=graph_conf.alg[pq_search.alg][pq_search.node_stage];
                 highlight_line(pq_search,6);
                 pq_search.alg_state="goal_test";
-		var idx_del=0;
-                    for (i=0;i<pq_search.fringe.length;i++)
+                var idx_del=0;
+                for (i=0;i<pq_search.fringe.length;i++)
+                    {
+                    if (pq_search.fringe[i]==pq_search.current_node)
                         {
-                        if (pq_search.fringe[i]==pq_search.current_node)
-                            {
-                            idx_del=i;
-                            break;
-                            }
+                        idx_del=i;
+                        break;
                         }
+                    }
                 pq_search.fringe.splice(idx_del,1);
+                highlight_path(pq_search,pq_search.current_node.split("-"));
                 }
             else if (pq_search.alg_state=="goal_test")
                 {
