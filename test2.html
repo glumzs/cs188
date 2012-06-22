@@ -18,8 +18,11 @@
         <div>
             <div id="holder"></div>
             <div id="pseudocode">
-                <input type="checkbox" id="pqsearch_showhints" value="1" checked>&nbsp; Show additional details
-about active line in algorithm
+                <div id="flow_buttons" align="center">
+                    Strategy: <b>DFS</b>&nbsp;&nbsp;<button id="next_step">Step</button>
+                </div>
+                <div id="hintbox"> <input type="checkbox" id="pqsearch_showhints" value="1" checked>&nbsp; Show additional details
+about active line in algorithm</div>
                 <ul id="codeguide"></ul><br>
                 <div id="buttons">
                     <button id="reached_goal">Reached Goal</button>
@@ -27,6 +30,13 @@ about active line in algorithm
                  </div>
                 <br>
                 <button id="continue_alg">Continue</button>
+            </div>
+            <div id="variables">
+            <b>current_node:</b><div id="current_node"></div>
+            <b>current_node_last_state:</b><div id="current_node_last_state"></div>
+            <b>successor:</b><div id="successor"></div>
+            <b>fringe:</b><div id="fringe" class="arg_var">
+            </div>
             </div>
         </div>
     </body>

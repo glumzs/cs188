@@ -60,7 +60,6 @@ var draw_search_graph = function (r,nodes,labels)
     var space_between_bottom = (space_avail+num_bottom_nodes*this.node_radius)/(num_bottom_nodes+1);
     var space_between_top = space_avail/(num_top_nodes+1);
     
-    console.log(space_between_bottom);
     var curr_x = interm_nodes_startx+space_between_bottom;
     var curr_y = this.graph_height-this.node_radius-3;
     var pos = 0; // 0 - bottom, 1 - top

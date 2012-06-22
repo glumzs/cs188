@@ -7,8 +7,10 @@ var green = "#01df01";
 var orange= "#ff9000";
 var white = "#fff";
 var black = "#000";
-var gray = "#848484";
+var gray = "#E6E6E6";
 var pqsearch_hintbox = "#pqsearch_showhints";
+var pqsearch_area = "#hintbox";
+var pqsearch_next_btn = '#next_step';
 var arrow_size=10;
 
 function rect_node_cl(r,x,y,problem,txt)
@@ -43,10 +45,10 @@ function toggle_hints(code)
 
 function clear_highlight(code)
     {
-    //$(document).trigger('hideClueTip');
     for (i = 0; i < code.length; i++)
         {
         $("#pqguide" + i).css('background-color',white);
+        $("#pqguide" + i).css('list-style-type','none');
         }
     }
     
@@ -54,12 +56,11 @@ function highlight_line(problem,id)
     {
     clear_highlight(problem.pseudocode);
     $("#pqguide"+id).css('background-color',gray);
-    //show_hint(id);
+    $("#pqguide"+id).css('list-style-type','circle');
     }
 
 function show_hint(id)
     {
-    //$(document).trigger('hideClueTip');
     if (id > -1 && $(pqsearch_hintbox).attr('checked'))
         $('#pqguide' + id + ' a:eq(0)').trigger('click.cluetip');
     }
@@ -67,12 +68,22 @@ function show_hint(id)
 
 function search_problem()
     {
+    this.demo=1;
+    this.alg='DFS';
+    this.alg_state="init_fringe";
+    this.fringe = new Array;
+    this.current_node="";
+    this.current_node_last_state="";
+    this.successor="";
+    this.node_stage=0;
+    this.explored_edges = new Array;
+    this.add_next="";
     this.last_x = 3;
     this.last_y = 250;
-    this.paper_width = 600;
+    this.paper_width = 500;
     this.paper_height=1000;
     this.graph_height=200;
-    this.graph_width= 400;
+    this.graph_width= 500;
     this.node_radius = 20;
     this.pseudocode = [];
     this.firstpass=1;
@@ -152,14 +163,37 @@ function set_priority(obj)
             
 window.onload = function () 
     {
-    var pq_search = new search_problem();        
-    pq_search.pseudocode = ['initialize priority queue<a href="" title="|click on the start node, S, and then enter 0 for its priority"></a>',
+    var pq_search = new search_problem();
+    if (pq_search.demo)
+        pq_search.pseudocode = ['function Tree-Search(problem,strategy) returns a solution, or failure',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;initialize the fringe with the initial state of problem',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;loop do',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if fringe is empty',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;then return failure',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;current_node <- select_node(fringe,strategy)',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if current_node ends in a goal state',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;then return current_node',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else current_node_last_state <- get_state',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for successor in successors(current_node_last_state)',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;add(fringe,append(current_node,successor))',
+                                '&nbsp;&nbsp;&nbsp;&nbsp;end'
+                                ]
+    else
+        pq_search.pseudocode = ['initialize priority queue<a href="" title="|click on the start node, S, and then enter 0 for its priority"></a>',
                             "loop do",
                             "&nbsp;&nbsp;&nbsp;&nbsp;if there are no nodes for expansion return failure",
                             '&nbsp;&nbsp;&nbsp;&nbsp;pop node from the priority queue for expansion<a href="" title="|Click on the partial|unxpanded plan with the top priority"></a>',
                             '&nbsp;&nbsp;&nbsp;&nbsp;if the node contains a goal state return the solution<a href="" title="|If the node contains a goal state click on the Reached Goal button below. Otherwise click the Not A Goal button"></a>',
                             '&nbsp;&nbsp;&nbsp;&nbsp;else expand the node<a  href="" title="Click on each node|you want to add,|enter priority.|Click the Continue|button after all nodes are added."></a>',
                             "end loop"];
+        
+    for (i = 0; i < pq_search.pseudocode.length; i++)
+        {
+        $("#codeguide").append("<li id='pqguide" + i + "'>" + pq_search.pseudocode[i] + "</li>");
+        if (!pq_search.demo)
+            $('#pqguide' + i + ' a:eq(0)').cluetip({arrows: true, sticky: true, splitTitle: '|', cluetipClass: 'rounded', showTitle: false, activation: 'click'});
+        }
+        
     $("#reached_goal").button();
     $("#not_goal").button();
     $("#buttons").hide();
@@ -271,14 +305,14 @@ window.onload = function ()
     }
     
     var graph_conf = { "nodes": ["S","A","B","C","D","G"],
-                       "edges": ["SA","SB","AD","DB","DC","CG","BC"]};
+                       "edges": ["SA","SB","AD","DB","DC","CG","BC"],
+                       "alg": {"DFS" : ["S","S-A","S-A-D","S-A-D-B","S-A-D-B-C","S-A-D-B-C-G"]}};
     pq_search.graph_conf = graph_conf;
         
     var r = Raphael("holder", pq_search.paper_width, pq_search.paper_height);
      
     pq_search.curr_fld = r.text(curr_cons_x,curr_cons_y,"");
     pq_search.curr_fld.attr({font: "14px Fontin-Sans, Arial"});
-    //pq_search.draw_graph = draw_search_graph;
     var nodes = r.set();
     var labels = r.set();
  
@@ -295,34 +329,133 @@ window.onload = function ()
         nodes[i].problem = pq_search;
         }
     
-    var pqlbl = r.text(60,230,"Priority Queue:");
-    pqlbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
     
-    var currlbl = r.text(curr_cons_x-145,curr_cons_y,"Node currently considered:");
-    currlbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
-    
-    var explbl = r.text(pq_search.exp_x,pq_search.exp_y,"Nodes that have been expanded:");
-    explbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
-    pq_search.exp_x = 3;
-    pq_search.exp_y += 20;
-    
-    var curr_highlight = r.rect(curr_cons_x-50, curr_cons_y-12, 110, 30, 10);
-    curr_highlight.attr({'stroke-width': 3});
-    
-    nodes.click(mk_fringe);
-    labels.click(mk_fringe);
+    if (pq_search.demo)
+        {
+        $(pqsearch_area).hide();
+        $(pqsearch_next_btn).button();
+        $(pqsearch_next_btn).click(
+        function()
+            {
+            if (pq_search.alg_state=="init_fringe")
+                {
+                pq_search.fringe.push(graph_conf.alg[pq_search.alg][0]);
+                highlight_line(pq_search,3);
+                pq_search.alg_state="chk_empty";
+                }
+            else if(pq_search.alg_state=="chk_empty")
+                {
+                highlight_line(pq_search,5);
+                pq_search.alg_state="select_node";
+                }
+            else if (pq_search.alg_state=="select_node")
+                {
+                pq_search.current_node=graph_conf.alg[pq_search.alg][pq_search.node_stage];
+                highlight_line(pq_search,6);
+                pq_search.alg_state="goal_test";
+                }
+            else if (pq_search.alg_state=="goal_test")
+                {
+                if (pq_search.current_node.charAt(pq_search.current_node.length-1) == "G")
+                    {
+                    pq_search.alg_state="goal_reached";
+                    //highlight_line(pq_search,7,green);
+                    $("#current_node").css('background-color',green);
+                    }
+                else
+                    {
+                    pq_search.alg_state="get_last_state";
+                    highlight_line(pq_search,8);
+                    }
+                }
+            else if(pq_search.alg_state=="get_last_state")
+                {
+                pq_search.current_node_last_state = pq_search.current_node.charAt(pq_search.current_node.length-1);
+                pq_search.alg_state="loop_successors";
+                highlight_line(pq_search,9);
+                }
+            else if(pq_search.alg_state=="loop_successors")
+                {
+                pq_search.successor="";
+                pq_search.add_next="";
+                for (i=0; i < graph_conf.edges.length;i++)
+                    {
+                    if (graph_conf.edges[i].charAt(0)== pq_search.current_node_last_state
+                        && !pq_search.explored_edges[graph_conf.edges[i]])
+                        {
+                        pq_search.explored_edges[graph_conf.edges[i]]=1;
+                        pq_search.successor=graph_conf.edges[i].charAt(1);
+                        pq_search.add_next = pq_search.current_node + "-" + pq_search.successor;
+                        //pq_search.add_next=graph_conf.edges[i].charAt(0) + "-" + graph_conf.edges[i].charAt(1);
+                        pq_search.alg_state="add_to_fringe";
+                        highlight_line(pq_search,10);
+                        break;
+                        }
+                    }
+                if (!pq_search.successor)
+                    {
+                    pq_search.node_stage++;
+                    pq_search.alg_state="chk_empty";
+                    highlight_line(pq_search,3);
+                    var idx_del=0;
+                    for (i=0;i<pq_search.fringe.length;i++)
+                        {
+                        if (pq_search.fringe[i]==pq_search.current_node)
+                            {
+                            idx_del=i;
+                            break;
+                            }
+                        }
+                    pq_search.fringe.splice(idx_del,1);
+                    }
+                }
+            else if(pq_search.alg_state=="add_to_fringe")
+                {
+                //pq_search.successor = pq_search.add_next.charAt(pq_search.add_next.length-1);
+                pq_search.fringe.push(pq_search.add_next);
+                pq_search.alg_state="loop_successors";
+                highlight_line(pq_search,9);
+                
+                }
+            else
+                {
+                //probably reached goal, this calls for a celebration
+                }
+                
+            $("#fringe").html(pq_search.fringe.join("<br>"));
+            $("#current_node").html(pq_search.current_node);
+            $("#successor").html(pq_search.successor);
+            $("#current_node_last_state").html(pq_search.current_node_last_state);
+            }
+        );
+         highlight_line(pq_search,1);
+        
+        }
+    else
+        {
+        nodes.click(mk_fringe);
+        labels.click(mk_fringe);
+        highlight_line(pq_search,0);
+        
+        var pqlbl = r.text(60,230,"Priority Queue:");
+        pqlbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
+        
+        var currlbl = r.text(curr_cons_x-145,curr_cons_y,"Node currently considered:");
+        currlbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
+        
+        var explbl = r.text(pq_search.exp_x,pq_search.exp_y,"Nodes that have been expanded:");
+        explbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
+        pq_search.exp_x = 3;
+        pq_search.exp_y += 20;
+        
+        var curr_highlight = r.rect(curr_cons_x-50, curr_cons_y-12, 110, 30, 10);
+        curr_highlight.attr({'stroke-width': 3});
+        }
+        
     pq_search.nodes = nodes;
     pq_search.labels = labels;
     pq_search.pqset = r.set();
     //$('div#holder').find('> svg,div').css({'border': '1px solid #f00'});
-    
-    for (i = 0; i < pq_search.pseudocode.length; i++)
-        {
-        $("#codeguide").append("<li id='pqguide" + i + "'>" + pq_search.pseudocode[i] + "</li>");
-        $('#pqguide' + i + ' a:eq(0)').cluetip({arrows: true, sticky: true, splitTitle: '|', cluetipClass: 'rounded', showTitle: false, activation: 'click'});
-        }
-    //$("#pqguide0").css('background-color',green);
-    highlight_line(pq_search,0);
     
     $(pqsearch_hintbox).click(function() {
         if($(pqsearch_hintbox).prop('checked'))

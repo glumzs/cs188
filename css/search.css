@@ -1,3 +1,6 @@
+body {
+    width:1100px;
+}
 #holder {
     float: left;
 }
@@ -5,11 +8,21 @@
 #pseudocode {
     float: left;
     width: 500px;
+    border: 2px solid;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 #codeguide li {
     margin: 0 3px 3px 3px;
     font-size: 16px;
+    font-weight: bold;
     list-style: none;
     font: "Fontin-Sans, Arial";
+}
+
+#variables {
+    top: 20;
+    float: right;
+    width: 80px;
 }
