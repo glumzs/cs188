@@ -353,6 +353,16 @@ window.onload = function ()
                 pq_search.current_node=graph_conf.alg[pq_search.alg][pq_search.node_stage];
                 highlight_line(pq_search,6);
                 pq_search.alg_state="goal_test";
+		var idx_del=0;
+                    for (i=0;i<pq_search.fringe.length;i++)
+                        {
+                        if (pq_search.fringe[i]==pq_search.current_node)
+                            {
+                            idx_del=i;
+                            break;
+                            }
+                        }
+                pq_search.fringe.splice(idx_del,1);
                 }
             else if (pq_search.alg_state=="goal_test")
                 {
@@ -397,7 +407,7 @@ window.onload = function ()
                     pq_search.node_stage++;
                     pq_search.alg_state="chk_empty";
                     highlight_line(pq_search,3);
-                    var idx_del=0;
+                    /*var idx_del=0;
                     for (i=0;i<pq_search.fringe.length;i++)
                         {
                         if (pq_search.fringe[i]==pq_search.current_node)
@@ -406,7 +416,7 @@ window.onload = function ()
                             break;
                             }
                         }
-                    pq_search.fringe.splice(idx_del,1);
+                    pq_search.fringe.splice(idx_del,1);*/
                     }
                 }
             else if(pq_search.alg_state=="add_to_fringe")
