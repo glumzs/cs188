@@ -12,6 +12,8 @@ var pqsearch_hintbox = "#pqsearch_showhints";
 var pqsearch_area = "#hintbox";
 var pqsearch_next_btn = '#next_step';
 var arrow_size=10;
+var node_width=110;
+var node_height=30;
 
 function rect_node_cl(r,x,y,problem,txt)
     {
@@ -28,7 +30,7 @@ function rect_node_cl(r,x,y,problem,txt)
                 cursor: 'default'});
     }
     
-function highlight_path(problem,path)
+function highlight_path(problem,path,color)
     {
     for (i = 0; i < problem.nodes.length; i++)
         problem.nodes[i].attr({fill: white});
@@ -40,11 +42,11 @@ function highlight_path(problem,path)
         {
         if (path[i] && path[i+1]
             && problem.hedges[path[i]+ path[i+1]])
-            color_arrow(problem.hedges[path[i]+ path[i+1]],green);
+            color_arrow(problem.hedges[path[i]+ path[i+1]],color);
         
         for (j = 0; j < problem.nodes.length; j++)
             if (problem.labels[j].attr('text') == path[i])
-                problem.nodes[j].attr({fill: green});
+                problem.nodes[j].attr({fill: color});
         }
     }
     
@@ -85,6 +87,13 @@ function show_hint(id)
         $('#pqguide' + id + ' a:eq(0)').trigger('click.cluetip');
     }
 
+function search_tree()
+    {
+    this.node = new String;
+    this.children = new Array;
+    this.coord_x=0;
+    this.coord_y=0;
+    }
 
 function search_problem()
     {
@@ -101,7 +110,10 @@ function search_problem()
     this.last_x = 3;
     this.last_y = 250;
     this.paper_width = 500;
-    this.paper_height=1000;
+    this.paper_height=2000;
+    this.treenode_width=100;
+    this.stree_x = (this.paper_width-this.treenode_width)/2;
+    this.stree_y = 250;
     this.graph_height=200;
     this.graph_width= 500;
     this.node_radius = 20;
@@ -115,6 +127,11 @@ function search_problem()
     this.labels = null;
     this.pqset = null;
     this.draw_graph = draw_search_graph;
+    this.draw_tree_node = draw_tree_node;
+    this.stree_last_node = null;
+    this.stree_obj = new Array;
+    this.stree = new search_tree;
+    this.stree_node_placement = new Array;
     }
 
 
@@ -352,6 +369,8 @@ window.onload = function ()
     
     if (pq_search.demo)
         {
+        var pqlbl = r.text(260,230,"Search Tree:");
+        pqlbl.attr({font: "14px Fontin-Sans, Arial", cursor: "default"});
         $(pqsearch_area).hide();
         $(pqsearch_next_btn).button();
         $(pqsearch_next_btn).click(
@@ -362,6 +381,7 @@ window.onload = function ()
                 pq_search.fringe.push(graph_conf.alg[pq_search.alg][0]);
                 highlight_line(pq_search,3);
                 pq_search.alg_state="chk_empty";
+                pq_search.draw_tree_node(r,pq_search.fringe[pq_search.fringe.length-1],1);
                 }
             else if(pq_search.alg_state=="chk_empty")
                 {
@@ -383,7 +403,8 @@ window.onload = function ()
                         }
                     }
                 pq_search.fringe.splice(idx_del,1);
-                highlight_path(pq_search,pq_search.current_node.split("-"));
+                pq_search.stree_obj[pq_search.current_node].attr({'fill': gray});
+                highlight_path(pq_search,pq_search.current_node.split("-"),green);
                 }
             else if (pq_search.alg_state=="goal_test")
                 {
@@ -428,16 +449,6 @@ window.onload = function ()
                     pq_search.node_stage++;
                     pq_search.alg_state="chk_empty";
                     highlight_line(pq_search,3);
-                    /*var idx_del=0;
-                    for (i=0;i<pq_search.fringe.length;i++)
-                        {
-                        if (pq_search.fringe[i]==pq_search.current_node)
-                            {
-                            idx_del=i;
-                            break;
-                            }
-                        }
-                    pq_search.fringe.splice(idx_del,1);*/
                     }
                 }
             else if(pq_search.alg_state=="add_to_fringe")
@@ -446,13 +457,15 @@ window.onload = function ()
                 pq_search.fringe.push(pq_search.add_next);
                 pq_search.alg_state="loop_successors";
                 highlight_line(pq_search,9);
-                
+                pq_search.draw_tree_node(r,pq_search.fringe[pq_search.fringe.length-1],0);
                 }
             else
                 {
                 //probably reached goal, this calls for a celebration
                 }
-                
+            //console.log(pq_search.fringe);
+            //if (pq_search.fringe[pq_search.fringe.length-1])
+            //    pq_search.draw_tree_node(r,pq_search.fringe[pq_search.fringe.length-1]);
             $("#fringe").html(pq_search.fringe.join("<br>"));
             $("#current_node").html(pq_search.current_node);
             $("#successor").html(pq_search.successor);

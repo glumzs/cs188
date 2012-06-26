@@ -44,6 +44,40 @@ Raphael.el.removeCursor = function () {
             return clearInterval(this.cursor.blinker), $(this.cursor.node).remove(), delete this.cursor
         };
 
+var draw_tree_node = function(r,node,root)
+    {
+    var pos_x, pos_y,nodes,parent;
+    parent="";
+    if (this.stree_last_node && node==this.stree_last_node.attr('text'))
+        return -1;
+    
+    if (root)
+        {
+        pos_x = this.stree_x;
+        pos_y = this.stree_y;
+        this.stree_node_placement[node] = [50,pos_y+100];
+        }
+    else
+        {
+        if (node.length>1)
+            parent=node.substring(0,node.length-2);
+        //console.log(parent);
+        pos_x = this.stree_node_placement[parent][0];
+        pos_y = this.stree_node_placement[parent][1];
+        this.stree_node_placement[parent] = [pos_x+120,pos_y];
+        this.stree_node_placement[node] = [pos_x,pos_y+100];
+        r.arrow(this.stree_obj[parent].attrs.x+node_width/2,this.stree_obj[parent].attrs.y+node_height,pos_x+node_width/2,pos_y-3,arrow_size-3);
+        }
+    var newholder = r.rect(pos_x, pos_y, node_width, node_height, 10);
+    newholder.attr({'fill': white, 'stroke-width': 3});
+    var newtxt = r.text(pos_x+50,pos_y+15);  
+    newtxt.attr({text: node, font: "14px Fontin-Sans, Arial", cursor: 'default'});
+    this.stree_obj[node] = newholder;
+    this.stree_last_node = newtxt;
+    
+    }
+
+
 var draw_search_graph = function (r,nodes,labels)
     {
     // Starting node always in the left middle
