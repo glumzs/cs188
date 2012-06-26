@@ -181,3 +181,55 @@ var draw_search_graph = function (r,nodes,labels)
         }
     
     }
+    
+function draw_edge(r,from_node,to_node)
+    {
+    var from_x,to_x, from_y,to_y;
+    var arrow_size=10;
+    if (from_node.attr('cx') == to_node.attr('cx')) // same x
+            {
+                
+            from_x = to_x = from_node.attr('cx');
+            if (from_node.attr('cy') > to_node.attr('cy')) //bottom to top
+                {
+                console.log("bottom to top ",s_node,e_node);
+                from_y = from_node.attr('cy')-20;
+                to_y = to_node.attr('cy')+20;
+                }
+            else // top to bottom
+                {
+                console.log("top to bottom",s_node,e_node);
+                from_y = from_node.attr('cy')+20;
+                to_y = to_node.attr('cy')-20;
+                }
+            }
+        else if (from_node.attr('cx') > to_node.attr('cx')) // forward to back
+            {
+            from_x = from_node.attr('cx')-20;
+            to_x = to_node.attr('cx')+20;
+            if (from_node.attr('cy') < to_node.attr('cy')) //top to bottom
+                {
+                from_y = from_node.attr('cy')+20;
+                to_y = to_node.attr('cy')-20;
+                }
+            else if (from_node.attr('cy') > to_node.attr('cy')) //bottom to top
+                {
+                from_y = from_node.attr('cy')-20;
+                to_y = to_node.attr('cy')+20;
+                }
+            else
+                {
+                from_y = from_node.attr('cy');
+                to_y = to_node.attr('cy');
+                }
+                
+            }
+        else // going forward
+            {
+            from_x = from_node.attr('cx')+20;
+            to_x = to_node.attr('cx')-20;
+            from_y = from_node.attr('cy');
+            to_y = to_node.attr('cy');
+            }
+        r.arrow(from_x,from_y,to_x,to_y,arrow_size);
+    }

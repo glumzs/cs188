@@ -130,7 +130,6 @@ function search_problem()
     this.draw_tree_node = draw_tree_node;
     this.stree_last_node = null;
     this.stree_obj = new Array;
-    this.stree = new search_tree;
     this.stree_node_placement = new Array;
     }
 
