@@ -86,8 +86,8 @@ var draw_search_graph = function ()
             }
         else if (this.hnodes[s_node].attr('cx') > this.hnodes[e_node].attr('cx')) // forward to back
             {
-            from_x = this.hnodes[s_node].attr('cx')-14;
-            to_x = this.hnodes[e_node].attr('cx')+14;
+            from_x = this.hnodes[s_node].attr('cx')-20;
+            to_x = this.hnodes[e_node].attr('cx')+20;
             if (this.hnodes[s_node].attr('cy') < this.hnodes[e_node].attr('cy')) //top to bottom
                 {
                 from_y = this.hnodes[s_node].attr('cy')+23;
@@ -123,7 +123,7 @@ var draw_search_graph = function ()
 window.onload = function()
     {
     var graph_conf = { "nodes": ["A","B","C","D","E","F"],
-                       "edges": ["AB","BC","DA","CD","EF","FC","AF"] };
+                       "edges": ["AB","BC","DA","CD","EF","FC","AF","DB"] };
                        
     var r = Raphael("holder", canvas_width, canvas_height);
     var transp = r.rect(0, 0, canvas_width, canvas_height);

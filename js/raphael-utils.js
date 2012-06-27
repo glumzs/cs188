@@ -78,6 +78,7 @@ var draw_tree_node = function(r,node,root)
     }
 
 
+
 var draw_search_graph = function (r,nodes,labels)
     {
     // Starting node always in the left middle
