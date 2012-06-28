@@ -403,7 +403,7 @@ window.onload = function ()
                     }
                 pq_search.fringe.splice(idx_del,1);
                 pq_search.stree_obj[pq_search.current_node].attr({'fill': gray});
-                highlight_path(pq_search,pq_search.current_node.split("-"),green);
+                //highlight_path(pq_search,pq_search.current_node.split("-"),green);
                 }
             else if (pq_search.alg_state=="goal_test")
                 {
