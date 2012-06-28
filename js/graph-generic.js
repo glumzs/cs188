@@ -69,50 +69,13 @@ var draw_search_graph = function ()
         var e_node = this.graph_conf.edges[i].charAt(1);
         var from_x=0, from_y=0,to_x=0,to_y = 0;
         
-        if (this.hnodes[s_node].attr('cx') == this.hnodes[e_node].attr('cx')) // same x
-            {
-                
-            from_x = to_x = this.hnodes[s_node].attr('cx');
-            if (this.hnodes[s_node].attr('cy') > this.hnodes[e_node].attr('cy')) //bottom to top
-                {
-                from_y = this.hnodes[s_node].attr('cy')-23;
-                to_y = this.hnodes[e_node].attr('cy')+23;
-                }
-            else // top to bottom
-                {
-                from_y = this.hnodes[s_node].attr('cy')+23;
-                to_y = this.hnodes[e_node].attr('cy')-23;
-                }
-            }
-        else if (this.hnodes[s_node].attr('cx') > this.hnodes[e_node].attr('cx')) // forward to back
-            {
-            from_x = this.hnodes[s_node].attr('cx')-20;
-            to_x = this.hnodes[e_node].attr('cx')+20;
-            if (this.hnodes[s_node].attr('cy') < this.hnodes[e_node].attr('cy')) //top to bottom
-                {
-                from_y = this.hnodes[s_node].attr('cy')+23;
-                to_y = this.hnodes[e_node].attr('cy')-23;
-                }
-            else if (this.hnodes[s_node].attr('cy') > this.hnodes[e_node].attr('cy')) //bottom to top
-                {
-                from_y = this.hnodes[s_node].attr('cy')-23;
-                to_y = this.hnodes[e_node].attr('cy')+23;
-                }
-            else
-                {
-                from_y = this.hnodes[s_node].attr('cy');
-                to_y = this.hnodes[e_node].attr('cy');
-                }
-                
-            }
-        else // going forward
-            {
-            from_x = this.hnodes[s_node].attr('cx')+23;
-            to_x = this.hnodes[e_node].attr('cx')-23;
-            from_y = this.hnodes[s_node].attr('cy');
-            to_y = this.hnodes[e_node].attr('cy');
-            }
-        var new_edge = r.arrow(from_x,from_y,to_x,to_y,arrow_size);
+        var from_coord = this.hnodes[s_node].attr('cx') + ' ' + this.hnodes[s_node].attr('cy');
+        var to_coord = this.hnodes[e_node].attr('cx')  + ' ' + this.hnodes[e_node].attr('cy') ;
+        var connect = r.path('M'+from_coord+'L'+to_coord);
+        connect.attr({'stroke': 'none'});
+        var arrow_from = connect.getPointAtLength(this.node_radius);
+        var arrow_to = connect.getPointAtLength(connect.getTotalLength()-this.node_radius-3);
+        var new_edge = r.arrow(arrow_from.x, arrow_from.y, arrow_to.x,arrow_to.y,arrow_size);
         this.edges.push(new_edge);
         this.hedges[this.graph_conf.edges[i]]=new_edge;
     

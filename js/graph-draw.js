@@ -1,6 +1,7 @@
 var canvas_width=500;
 var canvas_height=200;
 var node_radius=20;
+var arrow_size=8;
 
             
 window.onload = function () 
@@ -29,7 +30,6 @@ window.onload = function ()
                 };
         transp.mousemove(move_node);
         transp.click(function(){transp.unmousemove(move_node);});
-        console.log(posx,posy);
         }
     );
     
@@ -42,7 +42,15 @@ window.onload = function ()
             {
             this.attr({'fill': 'orange'});
             new_edge.push(this);
-            draw_edge(r,new_edge[0],new_edge[1]);
+            //draw_edge(r,new_edge[0],new_edge[1]);
+            var from_coord = new_edge[0].attr('cx') + ' ' + new_edge[0].attr('cy');
+            var to_coord = new_edge[1].attr('cx') + ' ' + new_edge[1].attr('cy');
+            var connect = r.path('M'+from_coord+'L'+to_coord);
+            connect.attr({'stroke': 'none'});
+            var arrow_from = connect.getPointAtLength(node_radius);
+            var arrow_to = connect.getPointAtLength(connect.getTotalLength()-node_radius-3);
+            r.arrow(arrow_from.x, arrow_from.y, arrow_to.x,arrow_to.y,arrow_size);
+            
             nodes.unclick(end_path);
             nodes.attr({'fill': 'white'});
             }
