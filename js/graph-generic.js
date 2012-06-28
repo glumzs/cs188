@@ -9,6 +9,7 @@ function graph_object(paper,graph_conf)
     this.nodes = paper.set();
     this.labels = paper.set();
     this.edges = paper.set();
+    this.arrowtips = paper.set();
     this.rect = null;
     this.canvas_width=canvas_width;
     this.canvas_height=canvas_height;
@@ -76,7 +77,8 @@ var draw_search_graph = function ()
         var arrow_from = connect.getPointAtLength(this.node_radius);
         var arrow_to = connect.getPointAtLength(connect.getTotalLength()-this.node_radius-3);
         var new_edge = r.arrow(arrow_from.x, arrow_from.y, arrow_to.x,arrow_to.y,arrow_size);
-        this.edges.push(new_edge);
+        this.edges.push(new_edge[0]);
+        this.arrowtips.push(new_edge[1]);
         this.hedges[this.graph_conf.edges[i]]=new_edge;
     
         }
@@ -91,8 +93,9 @@ window.onload = function()
     var r = Raphael("holder", canvas_width, canvas_height);
     var transp = r.rect(0, 0, canvas_width, canvas_height);
     transp.attr({fill: "white", stroke: "none"});
-    
     var graph = new graph_object(r,graph_conf);
     graph.rect = transp;
     graph.draw_graph();
+    console.log(graph.arrowtips.length);
+    
     }
