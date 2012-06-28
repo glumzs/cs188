@@ -130,107 +130,19 @@ var draw_search_graph = function (r,nodes,labels)
         {
         var s_node = this.graph_conf.edges[i].charAt(0);
         var e_node = this.graph_conf.edges[i].charAt(1);
-        var from_x=0, from_y=0,to_x=0,to_y = 0;
-        
-        if (this.hnodes[s_node].attr('cx') == this.hnodes[e_node].attr('cx')) // same x
-            {
-                
-            from_x = to_x = this.hnodes[s_node].attr('cx');
-            if (this.hnodes[s_node].attr('cy') > this.hnodes[e_node].attr('cy')) //bottom to top
-                {
-                console.log("bottom to top ",s_node,e_node);
-                from_y = this.hnodes[s_node].attr('cy')-20;
-                to_y = this.hnodes[e_node].attr('cy')+20;
-                }
-            else // top to bottom
-                {
-                console.log("top to bottom",s_node,e_node);
-                from_y = this.hnodes[s_node].attr('cy')+20;
-                to_y = this.hnodes[e_node].attr('cy')-20;
-                }
-            }
-        else if (this.hnodes[s_node].attr('cx') > this.hnodes[e_node].attr('cx')) // forward to back
-            {
-            from_x = this.hnodes[s_node].attr('cx')-20;
-            to_x = this.hnodes[e_node].attr('cx')+20;
-            if (this.hnodes[s_node].attr('cy') < this.hnodes[e_node].attr('cy')) //top to bottom
-                {
-                from_y = this.hnodes[s_node].attr('cy')+20;
-                to_y = this.hnodes[e_node].attr('cy')-20;
-                }
-            else if (this.hnodes[s_node].attr('cy') > this.hnodes[e_node].attr('cy')) //bottom to top
-                {
-                from_y = this.hnodes[s_node].attr('cy')-20;
-                to_y = this.hnodes[e_node].attr('cy')+20;
-                }
-            else
-                {
-                from_y = this.hnodes[s_node].attr('cy');
-                to_y = this.hnodes[e_node].attr('cy');
-                }
-                
-            }
-        else // going forward
-            {
-            from_x = this.hnodes[s_node].attr('cx')+20;
-            to_x = this.hnodes[e_node].attr('cx')-20;
-            from_y = this.hnodes[s_node].attr('cy');
-            to_y = this.hnodes[e_node].attr('cy');
-            }
-        this.hedges[this.graph_conf.edges[i]]=r.arrow(from_x,from_y,to_x,to_y,arrow_size);
-    
+        this.hedges[this.graph_conf.edges[i]]=draw_edge(r,this.hnodes[s_node],this.hnodes[e_node]);
         }
     
     }
     
 function draw_edge(r,from_node,to_node)
     {
-    var from_x,to_x, from_y,to_y;
-    var arrow_size=10;
-    if (from_node.attr('cx') == to_node.attr('cx')) // same x
-            {
-                
-            from_x = to_x = from_node.attr('cx');
-            if (from_node.attr('cy') > to_node.attr('cy')) //bottom to top
-                {
-                console.log("bottom to top ",s_node,e_node);
-                from_y = from_node.attr('cy')-20;
-                to_y = to_node.attr('cy')+20;
-                }
-            else // top to bottom
-                {
-                console.log("top to bottom",s_node,e_node);
-                from_y = from_node.attr('cy')+20;
-                to_y = to_node.attr('cy')-20;
-                }
-            }
-        else if (from_node.attr('cx') > to_node.attr('cx')) // forward to back
-            {
-            from_x = from_node.attr('cx')-20;
-            to_x = to_node.attr('cx')+20;
-            if (from_node.attr('cy') < to_node.attr('cy')) //top to bottom
-                {
-                from_y = from_node.attr('cy')+20;
-                to_y = to_node.attr('cy')-20;
-                }
-            else if (from_node.attr('cy') > to_node.attr('cy')) //bottom to top
-                {
-                from_y = from_node.attr('cy')-20;
-                to_y = to_node.attr('cy')+20;
-                }
-            else
-                {
-                from_y = from_node.attr('cy');
-                to_y = to_node.attr('cy');
-                }
-                
-            }
-        else // going forward
-            {
-            from_x = from_node.attr('cx')+20;
-            to_x = to_node.attr('cx')-20;
-            from_y = from_node.attr('cy');
-            to_y = to_node.attr('cy');
-            }
-        r.arrow(from_x,from_y,to_x,to_y,arrow_size);
-    }
+    var arrow_size=8;
+    var from_coord = from_node.attr('cx') + ' ' + from_node.attr('cy');
+    var to_coord = to_node.attr('cx') + ' ' + to_node.attr('cy');
+    var connect = r.path('M'+from_coord+'L'+to_coord);
+    connect.attr({'stroke': 'none'});
+    var arrow_from = connect.getPointAtLength(from_node.attr('r'));
+    var arrow_to = connect.getPointAtLength(connect.getTotalLength()-to_node.attr('r')-3);
+    return r.arrow(arrow_from.x, arrow_from.y, arrow_to.x,arrow_to.y,arrow_size);
+}
